@@ -27,11 +27,15 @@
   });
   window.addEventListener('message', ({data}) => {
     if (data.type !== 'state') return;
-    byId('status').textContent = data.busy ? '處理中…' : data.error ? '背景發生問題' : data.running ? '背景已啟用' : '背景已停用';
-    byId('toggle').textContent = data.running ? '禁用背景' : '啟用背景';
+    const t = key => data.strings?.[key] || key;
+    document.documentElement.lang = data.resolvedLanguage === 'zh-tw' ? 'zh-Hant' : 'en';
+    document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-aria]').forEach(element => { element.setAttribute('aria-label', t(element.dataset.i18nAria)); });
+    byId('status').textContent = data.busy ? t('處理中…') : data.error ? t('背景發生問題') : data.running ? t('背景已啟用') : t('背景已停用');
+    byId('toggle').textContent = data.running ? t('禁用背景') : t('啟用背景');
     byId('folderSection').hidden = data.mode !== 'folder';
     byId('engineSection').hidden = data.mode === 'folder';
-    for (const key of ['folderPath','currentFile']) byId(key).textContent = data[key] || '尚未選擇';
+    for (const key of ['folderPath','currentFile']) byId(key).textContent = data[key] || t('尚未選擇');
     byId('error').textContent = data.error || '';
     inputs.forEach(input => {
       // 正在輸入時先不要蓋掉，免得輪播更新把使用者打到一半的數字洗掉。

@@ -4,6 +4,7 @@ const {findExecutable, getActiveWallpaper, resolveWallpaper} = require('./wallpa
 const background = require('./background');
 const {Slideshow} = require('./slideshow');
 const {registerSidebar} = require('./sidebar');
+const {createTranslator} = require('./i18n');
 
 let shutdown;
 
@@ -13,6 +14,8 @@ function activate(context) {
   context.subscriptions.push(output, status);
   const appRoot = vscode.env.appRoot;
   const config = () => vscode.workspace.getConfiguration('wallpaperSync');
+  const i18n = createTranslator(() => config().get('language', 'auto'), vscode.env.language);
+  const t = i18n.t;
   let running = false, timer, pending, installed = false, lastKey, lastError;
   let revision = 0, changingMode = false;
   const slideshow = new Slideshow();
@@ -21,7 +24,7 @@ function activate(context) {
   function setStatus(text) {
     status.text = text;
     status.command = running ? 'wallpaperSync.stop' : 'wallpaperSync.start';
-    status.tooltip = lastError || (running ? 'Click to stop the wallpaper background' : 'Click to enable the wallpaper background');
+    status.tooltip = (lastError && i18n.error(lastError)) || (running ? t('Click to stop the wallpaper background') : t('Click to enable the wallpaper background'));
     sidebar?.refresh();
   }
 
@@ -59,7 +62,7 @@ function activate(context) {
     lastError = undefined;
     setStatus('$(paintcan) Wallpaper');
     if (reload) {
-      vscode.window.showInformationMessage('Background installed. Reload this window to display it behind your code.', 'Reload Window')
+      vscode.window.showInformationMessage(t('Background installed. Reload this window to display it behind your code.'), t('Reload Window'))
         .then(choice => { if (choice) vscode.commands.executeCommand('workbench.action.reloadWindow'); });
     }
   }
@@ -87,7 +90,7 @@ function activate(context) {
     await context.globalState.update('enabled', true);
     setStatus('$(sync~spin) Wallpaper');
     await poll();
-    if (lastError) { output.show(true); vscode.window.showWarningMessage(lastError); }
+    if (lastError) { output.show(true); vscode.window.showWarningMessage(i18n.error(lastError)); }
   }
 
   async function stop(remove = false) {
@@ -106,7 +109,7 @@ function activate(context) {
   }
 
   const command = (name, action) => context.subscriptions.push(vscode.commands.registerCommand(name, () =>
-    action().catch(error => { output.error(error.stack || error.message); output.show(true); vscode.window.showErrorMessage(error.message); })
+    action().catch(error => { output.error(error.stack || error.message); output.show(true); vscode.window.showErrorMessage(i18n.error(error.message)); })
   ));
   command('wallpaperSync.start', start);
   command('wallpaperSync.stop', () => stop());
@@ -119,14 +122,14 @@ function activate(context) {
   }
   async function switchMode(mode) {
     const choice = mode ? {mode} : await vscode.window.showQuickPick([
-      {label:'Wallpaper Engine', description:'同步目前套用的桌布', mode:'wallpaperEngine'},
-      {label:'資料夾輪播', description:'依檔名輪播影片與圖片', mode:'folder'}
-    ], {title:'切換背景模式'});
+      {label:'Wallpaper Engine', description:t('同步目前套用的桌布'), mode:'wallpaperEngine'},
+      {label:t('資料夾輪播'), description:t('依檔名輪播影片與圖片'), mode:'folder'}
+    ], {title:t('切換背景模式')});
     if (!choice) return;
     let folder;
     if (choice.mode === 'folder') {
       const selection = await vscode.window.showOpenDialog({canSelectFiles:false, canSelectFolders:true,
-        canSelectMany:false, openLabel:'使用此資料夾', title:'選擇影片與圖片資料夾'});
+        canSelectMany:false, openLabel:t('使用此資料夾'), title:t('選擇影片與圖片資料夾')});
       if (!selection?.length) return;
       folder = selection[0].fsPath;
       await new Slideshow().select(folder, 30);
@@ -147,10 +150,10 @@ function activate(context) {
   async function adjustOpacity(key, title, defaultValue) {
     const value = await vscode.window.showInputBox({
       title,
-      prompt:'輸入不透明度 0–100：100 完全顯示，0 完全透明（背景啟用時生效）',
+      prompt:t('輸入不透明度 0–100：100 完全顯示，0 完全透明（背景啟用時生效）'),
       value:String(Math.round(config().get(key, defaultValue) * 100)),
       validateInput:value => value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 100
-        ? undefined : '請輸入 0 到 100 的數字'
+        ? undefined : t('請輸入 0 到 100 的數字')
     });
     if (value === undefined) return;
     const settings = config();
@@ -159,13 +162,14 @@ function activate(context) {
       ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
     await settings.update(key, Number(value) / 100, target);
   }
-  command('wallpaperSync.textOpacity', () => adjustOpacity('textOpacity', '程式碼文字透明度', 1));
-  command('wallpaperSync.videoOpacity', () => adjustOpacity('opacity', '影片透明度', 0.25));
+  command('wallpaperSync.textOpacity', () => adjustOpacity('textOpacity', t('程式碼文字透明度'), 1));
+  command('wallpaperSync.videoOpacity', () => adjustOpacity('opacity', t('影片透明度'), 0.25));
   sidebar = registerSidebar(vscode, context, {
+    error:i18n.error,
     state:() => {
-      const defaults = {mode:'wallpaperEngine', folderPath:'', monitor:-1,
+      const defaults = {language:'auto', mode:'wallpaperEngine', folderPath:'', monitor:-1,
         pollSeconds:5, slideshowSeconds:30, opacity:0.25, textOpacity:1};
-      return {running, error:lastError || '', currentFile,
+      return {running, error:lastError ? i18n.error(lastError) : '', currentFile, strings:i18n.strings(), resolvedLanguage:i18n.language(),
         ...Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key, config().get(key, value)]))};
     },
     setting:async (key, value) => {
@@ -177,10 +181,10 @@ function activate(context) {
       if (action === 'folder') return switchMode('folder');
       if (action === 'logs') return output.show(true);
       if (action === 'restore') {
-        const confirmed = await vscode.window.showWarningMessage('要移除背景修改並還原 VS Code 嗎？', {modal:true}, '還原');
-        if (confirmed !== '還原') return;
+        const confirmed = await vscode.window.showWarningMessage(t('要移除背景修改並還原 VS Code 嗎？'), {modal:true}, t('還原'));
+        if (confirmed !== t('還原')) return;
         await stop(true);
-        const reload = await vscode.window.showInformationMessage('已還原，重新載入視窗後完成。', 'Reload Window');
+        const reload = await vscode.window.showInformationMessage(t('已還原，重新載入視窗後完成。'), t('Reload Window'));
         if (reload) await vscode.commands.executeCommand('workbench.action.reloadWindow');
       }
     }
@@ -189,6 +193,10 @@ function activate(context) {
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
     if (!event.affectsConfiguration('wallpaperSync')) return;
     sidebar.refresh();
+    if (event.affectsConfiguration('wallpaperSync.language') && !['mode','folderPath','slideshowSeconds','executable','monitor','pollSeconds','opacity','textOpacity'].some(key => event.affectsConfiguration('wallpaperSync.' + key))) {
+      setStatus(status.text);
+      return;
+    }
     revision++;
     if (event.affectsConfiguration('wallpaperSync.mode') || event.affectsConfiguration('wallpaperSync.folderPath')) slideshow.reset();
     if (running && !changingMode) {

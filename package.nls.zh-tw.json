@@ -1,0 +1,22 @@
+{
+  "command.start": "Wallpaper Sync: 啟用背景",
+  "command.stop": "Wallpaper Sync: 禁用背景",
+  "command.uninstall": "Wallpaper Sync: Restore VS Code",
+  "command.textOpacity": "Wallpaper Sync: 調整程式碼文字透明度",
+  "command.videoOpacity": "Wallpaper Sync: 調整影片透明度",
+  "command.switchMode": "Wallpaper Sync: 切換背景模式",
+  "command.openPanel": "Wallpaper Sync: 開啟控制面板",
+  "setting.mode": "背景來源：Wallpaper Engine 或資料夾輪播",
+  "setting.folderPath": "輪播資料夾完整路徑，只讀取此層檔案，不包含子資料夾",
+  "setting.slideshowSeconds": "每個影片或圖片的輪播秒數；影片到時會切換，不等待播放結束",
+  "setting.executable": "Wallpaper Engine 執行檔完整路徑",
+  "setting.monitor": "-1 使用預設桌布查詢，0 起指定螢幕索引",
+  "setting.pollSeconds": "每次 Wallpaper Engine 查詢完成後等待的秒數",
+  "setting.opacity": "影片透明度",
+  "setting.textOpacity": "程式碼文字不透明度：1 完全顯示，0 完全透明；背景啟用時生效",
+  "setting.language": "介面語言：預設跟隨 VS Code，選定後使用指定語言；原生命令名稱仍跟隨 VS Code",
+  "language.auto": "跟隨 VS Code 顯示語言",
+  "language.zh": "繁體中文",
+  "language.en": "英文",
+  "view.controls": "背景控制"
+}

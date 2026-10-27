@@ -1,0 +1,22 @@
+{
+  "command.start": "Wallpaper Sync: Enable Background",
+  "command.stop": "Wallpaper Sync: Disable Background",
+  "command.uninstall": "Wallpaper Sync: Restore VS Code",
+  "command.textOpacity": "Wallpaper Sync: Adjust Code Text Opacity",
+  "command.videoOpacity": "Wallpaper Sync: Adjust Background Opacity",
+  "command.switchMode": "Wallpaper Sync: Switch Background Mode",
+  "command.openPanel": "Wallpaper Sync: Open Control Panel",
+  "setting.mode": "Background source: Wallpaper Engine or folder slideshow",
+  "setting.folderPath": "Absolute slideshow folder path. Only files directly inside this folder are included.",
+  "setting.slideshowSeconds": "Seconds per file. Videos switch at the interval without waiting for playback to finish.",
+  "setting.executable": "Full path to wallpaper64.exe or wallpaper32.exe",
+  "setting.monitor": "Use -1 for the default wallpaper query, or a monitor index starting at 0",
+  "setting.pollSeconds": "Seconds to wait after each Wallpaper Engine query",
+  "setting.opacity": "Background opacity: 0 is transparent, 1 is fully visible",
+  "setting.textOpacity": "Code text opacity: 0 is transparent, 1 is fully visible; applies while the background is enabled",
+  "setting.language": "Interface language. Auto follows VS Code; an explicit selection overrides it. Native command titles still follow VS Code.",
+  "language.auto": "Follow the VS Code display language",
+  "language.zh": "Traditional Chinese",
+  "language.en": "English",
+  "view.controls": "Background Controls"
+}
