@@ -25,6 +25,7 @@ test('mode command uses folder without Wallpaper Engine and cancellation preserv
     module, setTimeout:() => 1, clearTimeout() {},
     require:name => {
       if (name === 'vscode') return vscode;
+      if (name === './sidebar') return {registerSidebar:() => ({refresh() {}})};
       if (name === './wallpaper') return {findExecutable:() => 'engine.exe',
         getActiveWallpaper:async () => { queried++; return 'engine.mp4'; },
         resolveWallpaper:() => ({kind:'video', file:'engine.mp4'})};

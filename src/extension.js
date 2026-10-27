@@ -3,6 +3,7 @@ const vscode = require('vscode');
 const {findExecutable, getActiveWallpaper, resolveWallpaper} = require('./wallpaper');
 const background = require('./background');
 const {Slideshow} = require('./slideshow');
+const {registerSidebar} = require('./sidebar');
 
 let shutdown;
 
@@ -15,11 +16,13 @@ function activate(context) {
   let running = false, timer, pending, installed = false, lastKey, lastError;
   let revision = 0, changingMode = false;
   const slideshow = new Slideshow();
+  let sidebar, currentFile = '';
 
   function setStatus(text) {
     status.text = text;
     status.command = running ? 'wallpaperSync.stop' : 'wallpaperSync.start';
     status.tooltip = lastError || (running ? 'Click to stop the wallpaper background' : 'Click to enable the wallpaper background');
+    sidebar?.refresh();
   }
 
   async function sync() {
@@ -49,6 +52,7 @@ function activate(context) {
     if (key !== lastKey) {
       await background.show(appRoot, wallpaper.file, opacity, textOpacity);
       lastKey = key;
+      currentFile = wallpaper.file;
       output.info(`Background: ${wallpaper.file}`);
     }
     if (lastError) output.info('Wallpaper detection recovered.');
@@ -96,6 +100,7 @@ function activate(context) {
     if (remove) { await background.uninstall(appRoot); installed = false; }
     else await background.hide(appRoot);
     lastKey = lastError = undefined;
+    currentFile = '';
     setStatus('$(circle-slash) Wallpaper');
     output.info(remove ? 'Workbench restored.' : 'Background disabled.');
   }
@@ -112,8 +117,8 @@ function activate(context) {
       ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
     await settings.update(key, value, target);
   }
-  command('wallpaperSync.switchMode', async () => {
-    const choice = await vscode.window.showQuickPick([
+  async function switchMode(mode) {
+    const choice = mode ? {mode} : await vscode.window.showQuickPick([
       {label:'Wallpaper Engine', description:'同步目前套用的桌布', mode:'wallpaperEngine'},
       {label:'資料夾輪播', description:'依檔名輪播影片與圖片', mode:'folder'}
     ], {title:'切換背景模式'});
@@ -137,7 +142,8 @@ function activate(context) {
       lastKey = undefined;
     } finally { changingMode = false; }
     await start();
-  });
+  }
+  command('wallpaperSync.switchMode', () => switchMode());
   async function adjustOpacity(key, title, defaultValue) {
     const value = await vscode.window.showInputBox({
       title,
@@ -155,8 +161,39 @@ function activate(context) {
   }
   command('wallpaperSync.textOpacity', () => adjustOpacity('textOpacity', '程式碼文字透明度', 1));
   command('wallpaperSync.videoOpacity', () => adjustOpacity('opacity', '影片透明度', 0.25));
+  sidebar = registerSidebar(vscode, context, {
+    state:() => {
+      const defaults = {mode:'wallpaperEngine', folderPath:'', executable:'', monitor:-1,
+        pollSeconds:5, slideshowSeconds:30, opacity:0.25, textOpacity:1};
+      return {running, error:lastError || '', currentFile,
+        ...Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key, config().get(key, value)]))};
+    },
+    setting:async (key, value) => {
+      if (key === 'mode') await switchMode(value);
+      else await updateSetting(key, value);
+    },
+    run:async action => {
+      if (action === 'toggle') return running ? stop() : start();
+      if (action === 'folder') return switchMode('folder');
+      if (action === 'logs') return output.show(true);
+      if (action === 'restore') {
+        const confirmed = await vscode.window.showWarningMessage('要移除背景修改並還原 VS Code 嗎？', {modal:true}, '還原');
+        if (confirmed !== '還原') return;
+        await stop(true);
+        const reload = await vscode.window.showInformationMessage('已還原，重新載入視窗後完成。', 'Reload Window');
+        if (reload) await vscode.commands.executeCommand('workbench.action.reloadWindow');
+      }
+      if (action === 'executable') {
+        const selected = await vscode.window.showOpenDialog({canSelectFiles:true, canSelectFolders:false,
+          canSelectMany:false, filters:{'Wallpaper Engine':['exe']}, openLabel:'使用此執行檔'});
+        if (selected?.length) await updateSetting('executable', selected[0].fsPath);
+      }
+    }
+  });
+  command('wallpaperSync.openPanel', async () => { await vscode.commands.executeCommand('wallpaperSync.controls.focus'); });
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
     if (!event.affectsConfiguration('wallpaperSync')) return;
+    sidebar.refresh();
     revision++;
     if (event.affectsConfiguration('wallpaperSync.mode') || event.affectsConfiguration('wallpaperSync.folderPath')) slideshow.reset();
     if (running && !changingMode) {

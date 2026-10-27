@@ -3,19 +3,22 @@
   "displayName": "Wallpaper to VS Code",
   "icon": "assets/icon.png",
   "description": "A plugin that integrates Wallpaper engines into VS Code",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "publisher": "domichung-wallpaper",
   "engines": { "vscode": "^1.90.0" },
   "main": "./src/extension.js",
   "activationEvents": ["onStartupFinished"],
   "contributes": {
+    "viewsContainers": {"activitybar":[{"id":"wallpaperSync","title":"Wallpaper","icon":"assets/activity.svg"}]},
+    "views": {"wallpaperSync":[{"id":"wallpaperSync.controls","name":"背景控制","type":"webview"}]},
     "commands": [
       {"command":"wallpaperSync.start","title":"Wallpaper Sync: 啟用背景"},
       {"command":"wallpaperSync.stop","title":"Wallpaper Sync: 禁用背景"},
       {"command":"wallpaperSync.uninstall","title":"Wallpaper Sync: Restore VS Code"},
       {"command":"wallpaperSync.textOpacity","title":"Wallpaper Sync: 調整程式碼文字透明度"},
       {"command":"wallpaperSync.videoOpacity","title":"Wallpaper Sync: 調整影片透明度"},
-      {"command":"wallpaperSync.switchMode","title":"Wallpaper Sync: 切換背景模式"}
+      {"command":"wallpaperSync.switchMode","title":"Wallpaper Sync: 切換背景模式"},
+      {"command":"wallpaperSync.openPanel","title":"Wallpaper Sync: 開啟控制面板"}
     ],
     "configuration": {"title":"Wallpaper Sync", "properties": {
       "wallpaperSync.mode": {"type":"string","enum":["wallpaperEngine","folder"],"default":"wallpaperEngine","description":"背景來源：Wallpaper Engine 或資料夾輪播"},
