@@ -1,0 +1,28 @@
+{
+  "name": "wallpaper-sync-vscode",
+  "displayName": "Wallpaper to VS Code",
+  "icon": "assets/icon.png",
+  "description": "A plugin that integrates Wallpaper engines into VS Code",
+  "version": "0.5.0",
+  "publisher": "domichung-wallpaper",
+  "engines": { "vscode": "^1.90.0" },
+  "main": "./src/extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "commands": [
+      {"command":"wallpaperSync.start","title":"Wallpaper Sync: 啟用背景"},
+      {"command":"wallpaperSync.stop","title":"Wallpaper Sync: 禁用背景"},
+      {"command":"wallpaperSync.uninstall","title":"Wallpaper Sync: Restore VS Code"},
+      {"command":"wallpaperSync.textOpacity","title":"Wallpaper Sync: 調整程式碼文字透明度"},
+      {"command":"wallpaperSync.videoOpacity","title":"Wallpaper Sync: 調整影片透明度"}
+    ],
+    "configuration": {"title":"Wallpaper Sync", "properties": {
+      "wallpaperSync.executable": {"type":"string","default":"","description":"Full path to wallpaper64.exe or wallpaper32.exe"},
+      "wallpaperSync.monitor": {"type":"integer","default":-1,"minimum":-1,"description":"Use -1 for the primary wallpaper, or a monitor index starting at 0"},
+      "wallpaperSync.pollSeconds": {"type":"integer","default":5,"minimum":2,"maximum":3600},
+      "wallpaperSync.opacity": {"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"影片透明度"},
+      "wallpaperSync.textOpacity": {"type":"number","default":1,"minimum":0,"maximum":1,"description":"程式碼文字不透明度：1 完全顯示，0 完全透明；背景啟用時生效"}
+    }}
+  },
+  "scripts": {"start":"cmd /c start-extension.cmd","test":"node --test"}
+}

@@ -1,0 +1,11 @@
+.vscode/**
+.git/**
+node_modules/**
+.dev-runtime/**
+start-extension.cmd
+test/**
+*.vsix
+.npm-cache/**
+.agents/**
+.codex/**
+AGENTS.md
