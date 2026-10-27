@@ -39,7 +39,7 @@ async function install(appRoot) {
   const clean = original.replace(BLOCK, '');
   if (!clean.includes('</html>')) throw new Error('Unrecognized workbench.html; no files were patched.');
   await fs.mkdir(target.assets, {recursive:true});
-  // Preserve the first original; restoration removes only our marked block.
+  // 先留一份原檔，之後還原才有得對；重複啟用也不要蓋掉最初那份。
   try { await fs.writeFile(target.backup, clean, {flag:'wx'}); }
   catch (error) { if (error.code !== 'EEXIST') throw error; }
   const renderer = await fs.readFile(path.join(__dirname, 'background-renderer.js'), 'utf8');
@@ -66,7 +66,7 @@ async function show(appRoot, file, opacity, textOpacity = 1) {
   const destination = path.join(target.assets, name);
   try { await fs.access(destination); }
   catch {
-    // Link on the same drive; copy across drives. Media stays in VS Code's app root.
+    // 同一顆磁碟就用硬連結，不能連才複製，讓 VS Code 能從自己的安裝目錄讀到桌布。
     try { await fs.link(file, destination); }
     catch { await fs.copyFile(file, destination); }
   }
@@ -74,7 +74,7 @@ async function show(appRoot, file, opacity, textOpacity = 1) {
     textOpacity:Number.isFinite(textOpacity) ? Math.max(0, Math.min(1, textOpacity)) : 1});
   for (const old of await fs.readdir(target.assets)) {
     if (old !== name && /^media-[a-f0-9]{16}\.(mp4|webm|m4v|jpe?g|png|webp|bmp)$/.test(old)) {
-      await fs.unlink(path.join(target.assets, old)).catch(() => {}); // Old playback may still hold a Windows file handle.
+      await fs.unlink(path.join(target.assets, old)).catch(() => {}); // 舊影片可能還被播放器占用，這次刪不掉就先留著。
     }
   }
 }
@@ -94,13 +94,13 @@ async function uninstall(appRoot) {
     if (error.code === 'ENOENT') return '';
     throw error;
   });
-  // Undo only our media-policy addition, preserving unrelated HTML edits.
+  // 只撤回我們加的影片權限，其他地方的修改不要動到。
   for (const directive of backup.match(MEDIA_POLICY) || []) {
     const patched = allowMediaBlob(directive);
     if (patched !== directive) clean = clean.replace(patched, directive);
   }
   if (current !== clean) await fs.writeFile(target.html, clean);
-  // Exact extension-owned paths beneath the verified workbench directory.
+  // 這裡只清掉確認過位置的套件資料夾和備份，不要刪到 VS Code 其他檔案。
   await fs.rm(target.assets, {recursive:true, force:true});
   await fs.rm(target.backup, {force:true});
 }

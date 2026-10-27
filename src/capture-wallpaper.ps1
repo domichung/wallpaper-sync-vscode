@@ -47,7 +47,7 @@ try {
         if ($row -eq ($cells.GetLength(0) - 1)) { $end = $after.X }
         for ($col = $start; $col -lt $end; $col++) {
             $cell = $cells[$row, $col]
-            # Wide Unicode characters occupy two console cells. Append only once.
+            # 中文這種寬字會占兩格，只抓一次就好，不然路徑會重複。
             if ($cell.BufferCellType -ne 'Trailing') { [void]$text.Append($cell.Character) }
         }
     }

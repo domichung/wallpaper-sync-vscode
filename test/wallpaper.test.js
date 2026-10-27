@@ -24,8 +24,8 @@ test('Scene packages use project preview, fall back to preview.png, and report m
   assert.throws(() => resolveWallpaper(pkg), /沒有可用的預覽圖片/);
 });
 
-// Load a fresh detector with only process execution replaced. File IO, result
-// decoding, cleanup, and the choice of query transport run as in production.
+// 每次測試都重新載入，只把啟動外部程式那段換成假的。
+// 讀寫檔案、解析結果、清理和切換查詢方式，還是照真正的流程跑。
 function detector(run) {
   const execFile = () => {};
   execFile[promisify.custom] = run;

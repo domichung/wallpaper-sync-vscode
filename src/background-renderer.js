@@ -1,4 +1,4 @@
-/* Runs in the native workbench. No extension-host APIs or wallpaper scripts. */
+/* 這支直接跑在 VS Code 編輯介面裡，這裡不能呼叫擴充套件的 API，也不執行桌布自己的腳本。 */
 (() => {
   'use strict';
   const base = new URL('.', document.currentScript.src);
