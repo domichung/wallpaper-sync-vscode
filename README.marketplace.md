@@ -1,6 +1,6 @@
 # Wallpaper to VS Code
 
-將 Wallpaper Engine 桌布顯示在程式碼編輯區背後，分別調整背景與文字的不透明度。
+將 Wallpaper Engine 桌布或本機資料夾內的影片、圖片顯示在程式碼編輯區背後，分別調整背景與文字的不透明度。
 
 ## 使用前準備
 
@@ -14,30 +14,33 @@
 
 1. 在 VS Code 安裝本擴充套件。
 2. 按 **Ctrl + Shift + P** 開啟命令選擇區。
-3. 執行 **Wallpaper Sync: 啟用背景**。
+3. 執行 **Wallpaper Sync: 開啟控制面板**，選擇背景來源。使用 Wallpaper Engine 時按 **啟用背景**；使用資料夾輪播時選擇資料夾後就會自動啟用。
 4. 出現提示後按 **Reload Window**，再開啟程式碼檔案。
 
 啟用狀態會保留，下次開啟相同 VS Code 設定檔時會自動啟動。切換 Wallpaper Engine 桌布後，背景會在下一次查詢時更新。
 
 ## 操作指令
 
-### 側邊欄控制面板（0.7）
+### 側邊欄控制面板（0.7.2）
 
 點選左側活動列的 **Wallpaper** 圖示，或執行 **Wallpaper Sync: 開啟控制面板**。
 
 - 啟用／禁用背景，查看目前背景檔案與錯誤。
 - 用下拉選單切換 Wallpaper Engine 或資料夾輪播。
-- 選擇輪播資料夾或 Wallpaper Engine 執行檔。
-- 設定輪播間隔、查詢間隔與螢幕索引。
-- 拖曳背景與文字不透明度滑桿，放開後儲存並套用。
+- 選擇輪播資料夾；Wallpaper Engine 沿用原有的路徑偵測流程。
+- 設定輪播間隔與查詢間隔。
+- 背景與文字不透明度可用滑桿或標題右側的 0–100 輸入框調整。放開滑桿，或輸入後按 Enter／離開欄位，就會儲存並套用。
 - 查看錯誤紀錄，或確認後還原 VS Code。
 
 面板、原有指令與設定頁共用設定。停用背景時也能調整設定，下次啟用時會套用。
+
+側邊欄不提供執行檔選擇或螢幕索引欄位，一般使用不需要調整這兩項。背景與文字不透明度標題右側都有百分比輸入框，可直接輸入整數，例如 `40` 代表 40%；拖曳滑桿時，輸入框會同步更新。
 
 所有指令都可透過 **Ctrl + Shift + P** 搜尋 `Wallpaper Sync`。
 
 | 指令 | 操作方式 |
 | --- | --- |
+| **Wallpaper Sync: 開啟控制面板** | 開啟側邊欄，以按鈕、下拉選單、滑桿或輸入框操作背景。 |
 | **Wallpaper Sync: 啟用背景** | 啟動桌布同步，首次套用依提示重新載入視窗。 |
 | **Wallpaper Sync: 切換背景模式** | 選擇 Wallpaper Engine 或資料夾輪播；選擇資料夾後自動啟用背景。再次選資料夾輪播可更換資料夾。 |
 | **Wallpaper Sync: 禁用背景** | 停止同步並隱藏背景。 |
@@ -70,7 +73,7 @@
 | `wallpaperSync.opacity` | `0.25` | 背景不透明度，範圍 0–1。 |
 | `wallpaperSync.textOpacity` | `1` | 程式碼文字不透明度，範圍 0–1。 |
 
-### Wallpaper Engine 裝在其他磁碟
+### 進階設定：Wallpaper Engine 裝在其他磁碟
 
 將 `wallpaperSync.executable` 設為實際的 `wallpaper64.exe` 或 `wallpaper32.exe` 路徑。例如在 **Preferences: Open User Settings (JSON)** 中合併以下設定，路徑請改成你的安裝位置：
 
@@ -97,4 +100,4 @@
 - 此套件會修改 VS Code 安裝檔以顯示背景，可能出現「安裝已損毀／已修改」的完整性提示；修改會影響使用同一套安裝的視窗。
 - VS Code 更新後若背景消失，重新執行 **Wallpaper Sync: 啟用背景**，並依提示重新載入。
 - 解除安裝本套件前，先執行 **Wallpaper Sync: Restore VS Code**，再重新載入視窗，最後解除安裝。
-- 若背景沒有出現，先確認 Wallpaper Engine 正在執行、執行檔路徑正確，以及背景不透明度不是 `0`。詳細訊息可到 **檢視 → 輸出 → Wallpaper Sync** 查看。
+- 若背景沒有出現，先確認背景已啟用、不透明度不是 `0`。Wallpaper Engine 模式需確認桌布正在顯示；資料夾模式需確認資料夾仍存在且包含支援的檔案。詳細訊息可按面板的 **查看錯誤紀錄**，或到 **檢視 → 輸出 → Wallpaper Sync** 查看。

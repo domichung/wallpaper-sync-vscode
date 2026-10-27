@@ -1,4 +1,4 @@
-param([switch]$Capture)
+﻿param([switch]$Capture)
 
 $ErrorActionPreference = 'Stop'
 

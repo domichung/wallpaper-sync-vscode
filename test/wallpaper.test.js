@@ -8,6 +8,12 @@ const {test} = require('node:test');
 const os = require('node:os');
 const {resolveWallpaper} = require('../src/wallpaper');
 
+test('Windows PowerShell script keeps UTF-8 BOM for Chinese comments', () => {
+  // Windows PowerShell 5.1 讀中文要有 BOM，不然註解也可能影響後面的程式。
+  const bytes = fs.readFileSync(path.join(__dirname, '../src/capture-wallpaper.ps1'));
+  assert.deepEqual([...bytes.subarray(0, 3)], [0xef, 0xbb, 0xbf]);
+});
+
 test('Scene packages use project preview, fall back to preview.png, and report missing images', async t => {
   const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'wallpaper-scene-test-'));
   t.after(() => fs.promises.rm(dir, {recursive:true, force:true}));

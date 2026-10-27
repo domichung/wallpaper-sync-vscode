@@ -2,18 +2,26 @@
   const vscode = acquireVsCodeApi();
   const byId = id => document.getElementById(id);
   const editing = new Set();
+  const inputs = [...document.querySelectorAll('[data-setting]')];
   document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => {
     vscode.postMessage({type:'action', action:button.dataset.action});
   }));
-  document.querySelectorAll('[data-setting]').forEach(input => {
+  inputs.forEach(input => {
     input.addEventListener('input', () => {
-      editing.add(input.id);
-      if (input.type === 'range') byId(input.id + 'Value').textContent = input.value + '%';
+      editing.add(input.dataset.setting);
+      if (input.dataset.percent && input.value !== '' && input.checkValidity()) {
+        for (const other of inputs) {
+          if (other !== input && other.dataset.setting === input.dataset.setting) other.value = input.value;
+        }
+      }
+    });
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && input.type === 'number' && input.value !== '' && input.checkValidity()) input.blur();
     });
     input.addEventListener('change', () => {
       if (!input.checkValidity() || input.value === '') { input.reportValidity(); return; }
-      editing.delete(input.id);
-      const value = input.tagName === 'SELECT' ? input.value : Number(input.value) / (input.type === 'range' ? 100 : 1);
+      editing.delete(input.dataset.setting);
+      const value = input.tagName === 'SELECT' ? input.value : Number(input.value) / (input.dataset.percent ? 100 : 1);
       vscode.postMessage({type:'setting', key:input.dataset.setting, value});
     });
   });
@@ -23,12 +31,11 @@
     byId('toggle').textContent = data.running ? '禁用背景' : '啟用背景';
     byId('folderSection').hidden = data.mode !== 'folder';
     byId('engineSection').hidden = data.mode === 'folder';
-    for (const key of ['folderPath','executable','currentFile']) byId(key).textContent = data[key] || (key === 'executable' ? '自動尋找' : '尚未選擇');
+    for (const key of ['folderPath','currentFile']) byId(key).textContent = data[key] || '尚未選擇';
     byId('error').textContent = data.error || '';
-    document.querySelectorAll('[data-setting]').forEach(input => {
+    inputs.forEach(input => {
       // 正在輸入時先不要蓋掉，免得輪播更新把使用者打到一半的數字洗掉。
-      if (!editing.has(input.id)) input.value = input.type === 'range' ? Math.round(data[input.dataset.setting] * 100) : data[input.dataset.setting];
-      if (input.type === 'range') byId(input.id + 'Value').textContent = input.value + '%';
+      if (!editing.has(input.dataset.setting)) input.value = input.dataset.percent ? Math.round(data[input.dataset.setting] * 100) : data[input.dataset.setting];
     });
     document.querySelectorAll('button,input,select').forEach(input => { input.disabled = data.busy; });
   });

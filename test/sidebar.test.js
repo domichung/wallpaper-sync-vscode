@@ -7,7 +7,7 @@ test('sidebar only accepts known settings with valid types and ranges', () => {
   assert.equal(validSetting('mode', 'folder'), true);
   assert.equal(validSetting('opacity', 0.4), true);
   assert.equal(validSetting('textOpacity', 1), true);
-  assert.equal(validSetting('monitor', -1), true);
+  assert.equal(validSetting('monitor', -1), false);
   for (const [key, value] of [['mode','other'], ['executable','evil.exe'], ['opacity',2],
     ['opacity',NaN], ['opacity','0.5'], ['monitor',1.2], ['slideshowSeconds',1], ['pollSeconds',3601]]) {
     assert.equal(validSetting(key, value), false);
@@ -34,12 +34,17 @@ test('sidebar sends current state, routes validated actions and drops unknown me
   assert.ok(webview.html.includes("default-src 'none'"));
   assert.ok(webview.html.includes("script-src 'nonce-"));
   assert.ok(!webview.html.includes('<script>example</script>'));
+  assert.ok(!webview.html.includes('選擇執行檔'));
+  assert.ok(!webview.html.includes('螢幕索引'));
+  assert.ok(webview.html.includes('id="opacityNumber"'));
+  assert.ok(webview.html.includes('id="textOpacityNumber"'));
   await receive({type:'ready'});
   assert.equal(messages.at(-1).mode, 'folder');
   await receive({type:'setting', key:'opacity', value:0.5});
   assert.deepEqual(changes, [['opacity',0.5]]);
   await receive({type:'setting', key:'executable', value:'unexpected.exe'});
   await receive({type:'action', action:'runShell'});
+  await receive({type:'action', action:'executable'});
   await receive({type:'action', action:'logs'});
   assert.equal(changes.length, 1);
   assert.deepEqual(actions, ['logs']);

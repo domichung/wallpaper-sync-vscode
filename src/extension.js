@@ -163,7 +163,7 @@ function activate(context) {
   command('wallpaperSync.videoOpacity', () => adjustOpacity('opacity', '影片透明度', 0.25));
   sidebar = registerSidebar(vscode, context, {
     state:() => {
-      const defaults = {mode:'wallpaperEngine', folderPath:'', executable:'', monitor:-1,
+      const defaults = {mode:'wallpaperEngine', folderPath:'', monitor:-1,
         pollSeconds:5, slideshowSeconds:30, opacity:0.25, textOpacity:1};
       return {running, error:lastError || '', currentFile,
         ...Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key, config().get(key, value)]))};
@@ -182,11 +182,6 @@ function activate(context) {
         await stop(true);
         const reload = await vscode.window.showInformationMessage('已還原，重新載入視窗後完成。', 'Reload Window');
         if (reload) await vscode.commands.executeCommand('workbench.action.reloadWindow');
-      }
-      if (action === 'executable') {
-        const selected = await vscode.window.showOpenDialog({canSelectFiles:true, canSelectFolders:false,
-          canSelectMany:false, filters:{'Wallpaper Engine':['exe']}, openLabel:'使用此執行檔'});
-        if (selected?.length) await updateSetting('executable', selected[0].fsPath);
       }
     }
   });

@@ -5,7 +5,7 @@ button{padding:8px 10px;border:1px solid var(--vscode-button-border,transparent)
 button:hover{background:var(--vscode-button-hoverBackground)}button:disabled,input:disabled,select:disabled{opacity:.6;cursor:wait}
 input[type=number],select{padding:6px;border:1px solid var(--vscode-input-border,transparent);background:var(--vscode-input-background);color:var(--vscode-input-foreground)}
 input[type=range]{accent-color:var(--vscode-focusBorder);margin:4px 0 10px}small{display:block;line-height:1.6}
-output{float:right;font-weight:normal}.path{word-break:break-all;font-size:12px;line-height:1.6;user-select:text}
+.opacity-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:18px;flex-wrap:wrap}.opacity-row label{margin:0}.percent{display:flex;align-items:center;gap:5px;margin-left:auto}.percent input{width:68px}.path{word-break:break-all;font-size:12px;line-height:1.6;user-select:text}
 #error{color:var(--vscode-errorForeground);white-space:pre-wrap;overflow-wrap:anywhere}footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--vscode-panel-border)}
 footer button+button{margin-top:8px}.secondary{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}.secondary:hover{background:var(--vscode-button-secondaryHoverBackground)}
 :focus-visible{outline:1px solid var(--vscode-focusBorder);outline-offset:2px}[hidden]{display:none!important}
