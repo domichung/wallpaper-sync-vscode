@@ -3,7 +3,7 @@
   "displayName": "Wallpaper to VS Code",
   "icon": "assets/icon.png",
   "description": "A plugin that integrates Wallpaper engines into VS Code",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "publisher": "domichung-wallpaper",
   "engines": { "vscode": "^1.90.0" },
   "main": "./src/extension.js",
@@ -14,9 +14,13 @@
       {"command":"wallpaperSync.stop","title":"Wallpaper Sync: 禁用背景"},
       {"command":"wallpaperSync.uninstall","title":"Wallpaper Sync: Restore VS Code"},
       {"command":"wallpaperSync.textOpacity","title":"Wallpaper Sync: 調整程式碼文字透明度"},
-      {"command":"wallpaperSync.videoOpacity","title":"Wallpaper Sync: 調整影片透明度"}
+      {"command":"wallpaperSync.videoOpacity","title":"Wallpaper Sync: 調整影片透明度"},
+      {"command":"wallpaperSync.switchMode","title":"Wallpaper Sync: 切換背景模式"}
     ],
     "configuration": {"title":"Wallpaper Sync", "properties": {
+      "wallpaperSync.mode": {"type":"string","enum":["wallpaperEngine","folder"],"default":"wallpaperEngine","description":"背景來源：Wallpaper Engine 或資料夾輪播"},
+      "wallpaperSync.folderPath": {"type":"string","default":"","description":"輪播資料夾完整路徑，只讀取此層檔案，不包含子資料夾"},
+      "wallpaperSync.slideshowSeconds": {"type":"integer","default":30,"minimum":2,"maximum":3600,"description":"每個影片或圖片的輪播秒數；影片到時會切換，不等待播放結束"},
       "wallpaperSync.executable": {"type":"string","default":"","description":"Full path to wallpaper64.exe or wallpaper32.exe"},
       "wallpaperSync.monitor": {"type":"integer","default":-1,"minimum":-1,"description":"Use -1 for the primary wallpaper, or a monitor index starting at 0"},
       "wallpaperSync.pollSeconds": {"type":"integer","default":5,"minimum":2,"maximum":3600},
@@ -24,5 +28,9 @@
       "wallpaperSync.textOpacity": {"type":"number","default":1,"minimum":0,"maximum":1,"description":"程式碼文字不透明度：1 完全顯示，0 完全透明；背景啟用時生效"}
     }}
   },
-  "scripts": {"start":"cmd /c start-extension.cmd","test":"node --test"}
+  "scripts": {
+    "start":"cmd /c start-extension.cmd",
+    "test":"node --test",
+    "package":"npx --yes --package @vscode/vsce vsce package --readme-path README.marketplace.md --no-dependencies --allow-missing-repository --skip-license"
+  }
 }

@@ -2,6 +2,7 @@
 const vscode = require('vscode');
 const {findExecutable, getActiveWallpaper, resolveWallpaper} = require('./wallpaper');
 const background = require('./background');
+const {Slideshow} = require('./slideshow');
 
 let shutdown;
 
@@ -12,6 +13,8 @@ function activate(context) {
   const appRoot = vscode.env.appRoot;
   const config = () => vscode.workspace.getConfiguration('wallpaperSync');
   let running = false, timer, pending, installed = false, lastKey, lastError;
+  let revision = 0, changingMode = false;
+  const slideshow = new Slideshow();
 
   function setStatus(text) {
     status.text = text;
@@ -20,17 +23,26 @@ function activate(context) {
   }
 
   async function sync() {
-    const exe = findExecutable(config().get('executable', ''));
-    if (!exe) throw new Error('Set wallpaperSync.executable to your Wallpaper Engine executable.');
-    const source = await getActiveWallpaper(exe, config().get('monitor', -1), message => output.info(message));
-    if (!running) return;
-    const wallpaper = resolveWallpaper(source);
-    if (!['video', 'image'].includes(wallpaper.kind)) throw new Error('請選擇影片或具有預覽圖片的 Scene 桌布；目前不支援 Web 桌布。');
+    const currentRevision = revision;
+    const settings = config();
+    let wallpaper;
+    if (settings.get('mode', 'wallpaperEngine') === 'folder') {
+      wallpaper = await slideshow.select(settings.get('folderPath', ''), settings.get('slideshowSeconds', 30));
+    } else {
+      const exe = findExecutable(settings.get('executable', ''));
+      if (!exe) throw new Error('Set wallpaperSync.executable to your Wallpaper Engine executable.');
+      const source = await getActiveWallpaper(exe, settings.get('monitor', -1), message => output.info(message));
+      if (!running || currentRevision !== revision) return;
+      wallpaper = resolveWallpaper(source);
+      if (!['video', 'image'].includes(wallpaper.kind)) throw new Error('請選擇影片或具有預覽圖片的 Scene 桌布；目前不支援 Web 桌布。');
+    }
+    if (!running || currentRevision !== revision) return;
     let reload = false;
     if (!installed) {
       reload = await background.install(appRoot);
       installed = true;
     }
+    if (!running || currentRevision !== revision) return;
     const opacity = config().get('opacity', 0.25);
     const textOpacity = config().get('textOpacity', 1);
     const key = `${wallpaper.file}:${opacity}:${textOpacity}`;
@@ -50,7 +62,7 @@ function activate(context) {
 
   function poll() {
     clearTimeout(timer);
-    if (!running) return Promise.resolve();
+    if (!running || changingMode) return Promise.resolve();
     if (pending) return pending;
     pending = sync().catch(async error => {
       if (!running) return;
@@ -61,7 +73,7 @@ function activate(context) {
       setStatus('$(warning) Wallpaper');
     }).finally(() => {
       pending = undefined;
-      if (running) timer = setTimeout(poll, config().get('pollSeconds', 5) * 1000);
+      if (running) timer = setTimeout(poll, config().get('mode', 'wallpaperEngine') === 'folder' ? 1000 : config().get('pollSeconds', 5) * 1000);
     });
     return pending;
   }
@@ -76,6 +88,8 @@ function activate(context) {
 
   async function stop(remove = false) {
     running = false;
+    revision++;
+    slideshow.reset();
     clearTimeout(timer);
     await context.globalState.update('enabled', false);
     await pending;
@@ -92,6 +106,38 @@ function activate(context) {
   command('wallpaperSync.start', start);
   command('wallpaperSync.stop', () => stop());
   command('wallpaperSync.uninstall', () => stop(true));
+  async function updateSetting(key, value) {
+    const settings = config();
+    const target = settings.inspect(key)?.workspaceValue !== undefined
+      ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+    await settings.update(key, value, target);
+  }
+  command('wallpaperSync.switchMode', async () => {
+    const choice = await vscode.window.showQuickPick([
+      {label:'Wallpaper Engine', description:'同步目前套用的桌布', mode:'wallpaperEngine'},
+      {label:'資料夾輪播', description:'依檔名輪播影片與圖片', mode:'folder'}
+    ], {title:'切換背景模式'});
+    if (!choice) return;
+    let folder;
+    if (choice.mode === 'folder') {
+      const selection = await vscode.window.showOpenDialog({canSelectFiles:false, canSelectFolders:true,
+        canSelectMany:false, openLabel:'使用此資料夾', title:'選擇影片與圖片資料夾'});
+      if (!selection?.length) return;
+      folder = selection[0].fsPath;
+      await new Slideshow().select(folder, 30);
+    }
+    changingMode = true;
+    revision++;
+    clearTimeout(timer);
+    try {
+      await pending;
+      if (folder) await updateSetting('folderPath', folder);
+      await updateSetting('mode', choice.mode);
+      slideshow.reset();
+      lastKey = undefined;
+    } finally { changingMode = false; }
+    await start();
+  });
   async function adjustOpacity(key, title, defaultValue) {
     const value = await vscode.window.showInputBox({
       title,
@@ -110,7 +156,13 @@ function activate(context) {
   command('wallpaperSync.textOpacity', () => adjustOpacity('textOpacity', '程式碼文字透明度', 1));
   command('wallpaperSync.videoOpacity', () => adjustOpacity('opacity', '影片透明度', 0.25));
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
-    if (running && event.affectsConfiguration('wallpaperSync')) poll();
+    if (!event.affectsConfiguration('wallpaperSync')) return;
+    revision++;
+    if (event.affectsConfiguration('wallpaperSync.mode') || event.affectsConfiguration('wallpaperSync.folderPath')) slideshow.reset();
+    if (running && !changingMode) {
+      const refresh = async () => { await pending; if (running && !changingMode) await poll(); };
+      refresh().catch(error => output.error(error));
+    }
   }));
   shutdown = () => { running = false; clearTimeout(timer); };
   setStatus('$(circle-slash) Wallpaper');
