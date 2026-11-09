@@ -57,5 +57,9 @@
   "Unsupported wallpaper media format.": "不支援這個桌布檔案格式。",
   "The wallpaper is not a media file.": "桌布路徑不是檔案。",
   "Cannot find this VS Code installation's workbench.html.": "找不到這套 VS Code 的 workbench.html。",
-  "Unrecognized workbench.html; no files were patched.": "無法辨識 workbench.html，尚未修改任何檔案。"
+  "Unrecognized workbench.html; no files were patched.": "無法辨識 workbench.html，尚未修改任何檔案。",
+  "Wallpaper Engine 執行檔位置": "Wallpaper Engine 執行檔位置",
+  "自動找不到時，請填入 wallpaper64.exe 或 wallpaper32.exe 的完整路徑。按 Enter 或離開欄位儲存；清空可恢復自動尋找。": "自動找不到時，請填入 wallpaper64.exe 或 wallpaper32.exe 的完整路徑。按 Enter 或離開欄位儲存；清空可恢復自動尋找。",
+  "找不到這個執行檔，請確認完整路徑。": "找不到這個執行檔，請確認完整路徑。",
+  "請填入 wallpaper64.exe 或 wallpaper32.exe 的完整路徑。": "請填入 wallpaper64.exe 或 wallpaper32.exe 的完整路徑。"
 }

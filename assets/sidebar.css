@@ -52,6 +52,7 @@ select:disabled {
   cursor: wait;
 }
 
+input[type=text],
 input[type=number],
 select {
   padding: 6px;

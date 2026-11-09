@@ -1,5 +1,6 @@
 'use strict';
 const vscode = require('vscode');
+const fs = require('node:fs');
 const {findExecutable, getActiveWallpaper, resolveWallpaper} = require('./wallpaper');
 const background = require('./background');
 const {Slideshow} = require('./slideshow');
@@ -167,12 +168,17 @@ function activate(context) {
   sidebar = registerSidebar(vscode, context, {
     error:i18n.error,
     state:() => {
-      const defaults = {language:'auto', mode:'wallpaperEngine', folderPath:'', monitor:-1,
+      const defaults = {language:'auto', mode:'wallpaperEngine', folderPath:'', executable:'', monitor:-1,
         pollSeconds:5, slideshowSeconds:30, opacity:0.25, textOpacity:1};
-      return {running, error:lastError ? i18n.error(lastError) : '', currentFile, strings:i18n.strings(), resolvedLanguage:i18n.language(),
+      return {running, needsExecutable:!findExecutable(config().get('executable', '')), error:lastError ? i18n.error(lastError) : '', currentFile, strings:i18n.strings(), resolvedLanguage:i18n.language(),
         ...Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key, config().get(key, value)]))};
     },
     setting:async (key, value) => {
+      if (key === 'executable' && value) {
+        let valid = false;
+        try { valid = fs.statSync(value).isFile(); } catch {}
+        if (!valid) throw new Error('找不到這個執行檔，請確認完整路徑。');
+      }
       if (key === 'mode') await switchMode(value);
       else await updateSetting(key, value);
     },

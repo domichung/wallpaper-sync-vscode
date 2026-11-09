@@ -16,12 +16,12 @@
       }
     });
     input.addEventListener('keydown', event => {
-      if (event.key === 'Enter' && input.type === 'number' && input.value !== '' && input.checkValidity()) input.blur();
+      if (event.key === 'Enter' && ['number', 'text'].includes(input.type) && input.checkValidity()) input.blur();
     });
     input.addEventListener('change', () => {
-      if (!input.checkValidity() || input.value === '') { input.reportValidity(); return; }
+      if (!input.checkValidity() || (input.value === '' && input.type !== 'text')) { input.reportValidity(); return; }
       editing.delete(input.dataset.setting);
-      const value = input.tagName === 'SELECT' ? input.value : Number(input.value) / (input.dataset.percent ? 100 : 1);
+      const value = input.type === 'text' ? input.value.trim().replace(/^"|"$/g, '').replace(/\//g, '\\') : input.tagName === 'SELECT' ? input.value : Number(input.value) / (input.dataset.percent ? 100 : 1);
       vscode.postMessage({type:'setting', key:input.dataset.setting, value});
     });
   });
@@ -35,6 +35,7 @@
     byId('toggle').textContent = data.running ? t('禁用背景') : t('啟用背景');
     byId('folderSection').hidden = data.mode !== 'folder';
     byId('engineSection').hidden = data.mode === 'folder';
+    byId('executableSection').hidden = !data.needsExecutable && !data.executable;
     for (const key of ['folderPath','currentFile']) byId(key).textContent = data[key] || t('尚未選擇');
     byId('error').textContent = data.error || '';
     inputs.forEach(input => {

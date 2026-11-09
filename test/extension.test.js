@@ -25,6 +25,7 @@ test('mode command uses folder without Wallpaper Engine and cancellation preserv
     module, setTimeout:() => 1, clearTimeout() {},
     require:name => {
       if (name === 'vscode') return vscode;
+      if (name === 'node:fs') return require('node:fs');
       if (name === './i18n') return require('../src/i18n');
       if (name === './sidebar') return {registerSidebar:(_v, _c, actions) => { panel = actions; return {refresh() {}}; }};
       if (name === './wallpaper') return {findExecutable:() => 'engine.exe',
@@ -55,5 +56,7 @@ test('mode command uses folder without Wallpaper Engine and cancellation preserv
   assert.equal(panel.state().strings['背景來源'], '背景來源');
   assert.equal(queried, 1);
   assert.deepEqual(errors, []);
+  await assert.rejects(panel.setting('executable', 'Z:\\missing\\wallpaper64.exe'), /完整路徑/);
+  assert.equal(values.executable, undefined);
   module.exports.deactivate();
 });

@@ -4,6 +4,7 @@ const {randomBytes} = require('node:crypto');
 function validSetting(key, value) {
   const ranges = {opacity:[0,1], textOpacity:[0,1], pollSeconds:[2,3600], slideshowSeconds:[2,3600]};
   if (key === 'language') return ['auto', 'en', 'zh-tw'].includes(value);
+  if (key === 'executable') return typeof value === 'string' && (value === '' || /^(?:[a-z]:\\|\\\\)[^\r\n\0]*\\wallpaper(?:32|64)\.exe$/i.test(value));
   if (key === 'mode') return ['folder', 'wallpaperEngine'].includes(value);
   const range = ranges[key];
   return !!range && typeof value === 'number' && Number.isFinite(value) && value >= range[0] && value <= range[1]
@@ -31,6 +32,11 @@ function registerSidebar(vscode, context, actions) {
 <section id="folderSection"><label data-i18n="輪播資料夾">輪播資料夾</label><p id="folderPath" class="path"></p><button data-action="folder" data-i18n="選擇資料夾">選擇資料夾</button>
 <label for="slideshowSeconds" data-i18n="每個檔案顯示秒數">每個檔案顯示秒數</label><input id="slideshowSeconds" data-setting="slideshowSeconds" type="number" min="2" max="3600"><small data-i18n="依檔名輪播，不含子資料夾；影片到時也會切換。">依檔名輪播，不含子資料夾；影片到時也會切換。</small></section>
 <section id="engineSection">
+<div id="executableSection" hidden>
+<label for="executable" data-i18n="Wallpaper Engine 執行檔位置">Wallpaper Engine 執行檔位置</label>
+<input id="executable" data-setting="executable" type="text" placeholder="D:/Steam/steamapps/common/wallpaper_engine/wallpaper64.exe">
+<small data-i18n="自動找不到時，請填入 wallpaper64.exe 或 wallpaper32.exe 的完整路徑。按 Enter 或離開欄位儲存；清空可恢復自動尋找。">自動找不到時，請填入 wallpaper64.exe 或 wallpaper32.exe 的完整路徑。按 Enter 或離開欄位儲存；清空可恢復自動尋找。</small>
+</div>
 <label for="pollSeconds" data-i18n="查詢間隔（秒）">查詢間隔（秒）</label><input id="pollSeconds" data-setting="pollSeconds" type="number" min="2" max="3600"></section>
 <div class="opacity-row"><label for="opacityNumber" data-i18n="背景不透明度">背景不透明度</label><div class="percent"><input id="opacityNumber" aria-label="背景不透明度百分比" data-i18n-aria="背景不透明度百分比" data-setting="opacity" data-percent="true" type="number" min="0" max="100" step="1"><span>%</span></div></div>
 <input id="opacity" aria-label="背景不透明度滑桿" data-i18n-aria="背景不透明度滑桿" data-setting="opacity" data-percent="true" type="range" min="0" max="100">
@@ -44,7 +50,13 @@ function registerSidebar(vscode, context, actions) {
         if (message.type === 'ready') { refresh(); return; }
         if (busy) { refresh(); return; }
         // 面板只收這幾種操作，不能讓網頁隨便改設定或執行指令。
-        if (message.type === 'setting' && !validSetting(message.key, message.value)) { refresh(); return; }
+        if (message.type === 'setting' && !validSetting(message.key, message.value)) {
+          if (message.key === 'executable') {
+            const text = '請填入 wallpaper64.exe 或 wallpaper32.exe 的完整路徑。';
+            await vscode.window.showErrorMessage(actions.error ? actions.error(text) : text);
+          }
+          refresh(); return;
+        }
         if (message.type !== 'setting' && !(message.type === 'action' && ['toggle','folder','logs','restore'].includes(message.action))) return;
         busy = true;
         refresh();

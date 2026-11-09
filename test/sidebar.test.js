@@ -8,6 +8,8 @@ test('sidebar only accepts known settings with valid types and ranges', () => {
   assert.equal(validSetting('opacity', 0.4), true);
   assert.equal(validSetting('textOpacity', 1), true);
   assert.equal(validSetting('monitor', -1), false);
+  assert.equal(validSetting('executable', 'D:\\Steam\\wallpaper64.exe'), true);
+  assert.equal(validSetting('executable', ''), true);
   for (const [key, value] of [['mode','other'], ['executable','evil.exe'], ['opacity',2],
     ['opacity',NaN], ['opacity','0.5'], ['monitor',1.2], ['slideshowSeconds',1], ['pollSeconds',3601]]) {
     assert.equal(validSetting(key, value), false);
@@ -48,7 +50,7 @@ test('sidebar sends current state, routes validated actions and drops unknown me
   await receive({type:'action', action:'logs'});
   assert.equal(changes.length, 1);
   assert.deepEqual(actions, ['logs']);
-  assert.deepEqual(errors, []);
+  assert.equal(errors.length, 1);
   dispose();
   const count = messages.length;
   panel.refresh();
